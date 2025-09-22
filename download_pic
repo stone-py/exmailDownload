@@ -1,0 +1,62 @@
+// ==UserScript==
+// @name         QQ Exmail 批量下载邮件图片
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  批量下载邮件中 exmail.qq.com 的 viewfile 图片链接
+// @author       Stone-py
+// @match        https://exmail.qq.com/cgi-bin/*
+// @grant        GM_download
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 添加一个按钮
+    const btn = document.createElement("button");
+    btn.innerText = "批量下载图片";
+    btn.style.position = "fixed";
+    btn.style.top = "20px";
+    btn.style.right = "20px";
+    btn.style.zIndex = "99999";
+    btn.style.padding = "10px";
+    btn.style.background = "#4CAF50";
+    btn.style.color = "white";
+    btn.style.border = "none";
+    btn.style.borderRadius = "5px";
+    btn.style.cursor = "pointer";
+
+    document.body.appendChild(btn);
+
+    btn.addEventListener("click", () => {
+        // 找出所有 viewfile 链接（可能在 <img src> 或 <a href>）
+        const nodes = [
+            ...document.querySelectorAll("img[src*='viewfile']"),
+            ...document.querySelectorAll("a[href*='viewfile']")
+        ];
+
+        if (nodes.length === 0) {
+            alert("未找到 viewfile 链接图片");
+            return;
+        }
+
+        nodes.forEach((el, idx) => {
+            let url = el.src || el.href;
+            if (!url) return;
+
+            // 统一保存为 jpg
+            let filename = `mail_img_${idx + 1}.jpg`;
+
+            try {
+                GM_download({
+                    url: url,
+                    name: filename,
+                    saveAs: false
+                });
+            } catch (e) {
+                console.error("下载失败: ", url, e);
+            }
+        });
+
+        alert("开始下载 " + nodes.length + " 张图片");
+    });
+})();
